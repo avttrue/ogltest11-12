@@ -13,8 +13,8 @@ uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_NormalMap;
 uniform sampler2D u_ShadowMap;
 uniform highp float u_ShadowMapSize;
-uniform highp float u_PointCloudFilteringQuality;
-uniform highp float u_LightPower; // сила освещения
+uniform highp float u_ShadowPointCloudFilteringQuality;
+uniform highp float u_MainLightPower;
 
 varying highp vec4 v_position;
 varying highp vec2 v_textcoord;
@@ -50,9 +50,9 @@ float SampleShadowMapLinear(sampler2D map, vec2 coords, float compare, vec2 texe
 float SampleShadowMapPCF(sampler2D map, vec2 coords, float compare, vec2 texelsize)
 {
     float result = 0.0f;
-    float pcfq = u_PointCloudFilteringQuality;
-    for(float y = -pcfq; y < pcfq; y += 1.0f)
-        for(float x = -pcfq; x < pcfq; x += 1.0f)
+    float spcfq = u_ShadowPointCloudFilteringQuality;
+    for(float y = -spcfq; y < spcfq; y += 1.0f)
+        for(float x = -spcfq; x < spcfq; x += 1.0f)
         {
             vec2 offset = vec2(x, y) * texelsize;
             result += SampleShadowMapLinear(map, coords + offset, compare, texelsize);
@@ -90,13 +90,13 @@ void main(void)
 
     if(u_IsUseDiffuseMap == false) diffMatColor = vec4(u_MaterialProperty.DiffuseColor, 1.0f);
 
-    vec4 diffColor = diffMatColor * u_LightPower * max(0.0f, dot(usingNormal, -lightVec));
+    vec4 diffColor = diffMatColor * u_MainLightPower * max(0.0f, dot(usingNormal, -lightVec));
     resultColor += diffColor;
 
     vec4 ambientColor = ambientFactor * diffMatColor;
     resultColor += ambientColor * vec4(u_MaterialProperty.AmbienceColor, 1.0f);
 
-    vec4 specularColor = reflectionColor * u_LightPower * pow(max(0.0f, dot(reflectLight, -eyeVec)), specularFactor);
+    vec4 specularColor = reflectionColor * u_MainLightPower * pow(max(0.0f, dot(reflectLight, -eyeVec)), specularFactor);
     resultColor += specularColor * vec4(u_MaterialProperty.SpecularColor, 1.0f);
 
     highp float shadowCoef = CalcShadowAmount(u_ShadowMap, v_positionLightMatrix);

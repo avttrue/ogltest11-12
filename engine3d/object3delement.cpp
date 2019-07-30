@@ -81,13 +81,13 @@ void Object3DElement::draw(QOpenGLShaderProgram *program, QOpenGLFunctions *func
 
     if(m_Material->isUseDiffuseMap())
     {
-        m_DiffuseMap->bind(0);
+        m_DiffuseMap->bind(0); // текстурный слот основной текстуры
         program->setUniformValue("u_DiffuseMap", 0);
     }
 
     if(m_Material->isUseNormalMap())
     {
-        m_NormalMap->bind(1);
+        m_NormalMap->bind(1); // текстурный слот карты нормалей
         program->setUniformValue("u_NormalMap", 1);
     }
 

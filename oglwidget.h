@@ -36,8 +36,8 @@ protected:
     void initShaders();
     void initParallelogram(float width, float height, float depth,
                            QImage *texturemap = nullptr, QImage *normalmap = nullptr);
-    void timerStop();
-    void timerStart();
+    void animTimerStop();
+    void animTimerStart();
 
 private:
     QMatrix4x4 m_ProjectionMatrix;
@@ -51,16 +51,15 @@ private:
     QQuaternion m_Rotation;
     QVector<Object3D*> m_Objects;
     QVector<Object3DGroup*> m_Groups;
-    QBasicTimer m_Timer;
+    QBasicTimer m_AnimationTimer;
     Object3DGroup* m_GlobalGroup;
     Eye* m_Eye;
     SkyBox* m_SkyBox;
     QOpenGLFramebufferObject* m_DepthBuffer;
 
-    float m_PointCloudFilteringQuality;
+    float m_MainLightPower;
+    float m_ShadowPointCloudFilteringQuality;
     int m_ShadowMapSize;
-    //int m_FBHeight;
-    //int m_FBWidth;
     unsigned int m_ShadowTextureSlot;
     float m_LightRotateX;
     float m_LightRotateY;

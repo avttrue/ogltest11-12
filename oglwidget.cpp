@@ -16,9 +16,9 @@ OGLWidget::OGLWidget(QWidget *parent)
 {
     m_ShadowTextureSlot = GL_TEXTURE2;  // 0 и 1 текстурные слоты уже заняты
 
-    m_PointCloudFilteringQuality = 1.5f; // влияет на производительность, можно параметризировать
+    m_ShadowPointCloudFilteringQuality = 1.5f; // влияет на производительность, можно параметризировать
     m_ShadowMapSize = 1024;// влияет на производительность, можно параметризировать
-    //m_FBWidth = m_FBHeight = static_cast<int>(m_ShadowMapSize);
+    m_MainLightPower = 0.9f; // мощность основного освещения, можно параметризировать
 
     m_LightRotateX = 50.0f; // * угол наклона освещения можно параметризировать
     m_LightRotateY = 60.0f; // *
@@ -68,7 +68,8 @@ void OGLWidget::initializeGL()
         {
             for(float z = -step; z <= step; z += step)
             {
-                initParallelogram(1.0f, 1.0f, 1.0f, new QImage(":/textures/cube1.png"), new QImage(":/textures/cube1_n.png"));
+                initParallelogram(1.0f, 1.0f, 1.0f,
+                                  new QImage(":/textures/cube1.png"), new QImage(":/textures/cube1_n.png"));
                 m_Objects.last()->translate(QVector3D(x, y, z));
                 m_Groups.last()->add(m_Objects.last());
             }
@@ -83,7 +84,8 @@ void OGLWidget::initializeGL()
         {
             for(float z = -step; z <= step; z += step)
             {
-                initParallelogram(1.0f, 1.0f, 1.0f, new QImage(":/textures/cube2.png"), new QImage(":/textures/cube2_n.png"));
+                initParallelogram(1.0f, 1.0f, 1.0f,
+                                  new QImage(":/textures/cube2.png"), new QImage(":/textures/cube2_n.png"));
                 m_Objects.last()->translate(QVector3D(x, y, z));
                 m_Groups.last()->add(m_Objects.last());
             }
@@ -98,7 +100,8 @@ void OGLWidget::initializeGL()
         {
             for(float z = -step; z <= step; z += step)
             {
-                initParallelogram(1.0f, 1.0f, 1.0f, new QImage(":/textures/cube3.png"), new QImage(":/textures/cube3_n.png"));
+                initParallelogram(1.0f, 1.0f, 1.0f,
+                                  new QImage(":/textures/cube3.png"), new QImage(":/textures/cube3_n.png"));
                 m_Objects.last()->translate(QVector3D(x, y, z));
                 m_Groups.last()->add(m_Objects.last());
             }
@@ -151,7 +154,8 @@ void OGLWidget::initializeGL()
     m_GlobalGroup->add(m_Groups.last());
 
     m_Groups.append(new Object3DGroup("table"));
-    initParallelogram(60.0, 5.0, 60.0, new QImage(":/textures/cube3.png"));//, new QImage(":/textures/cube3_n.png"));
+    initParallelogram(60.0, 5.0, 60.0,
+                      new QImage(":/textures/cube3.png"), new QImage(":/textures/cube3_n.png"));
     m_Objects.last()->translate(QVector3D(0.0, -10.0, 0.0));
     m_Groups.last()->add(m_Objects.last());
     m_GlobalGroup->add(m_Groups.last());
@@ -166,7 +170,7 @@ void OGLWidget::initializeGL()
 
     m_DepthBuffer = new QOpenGLFramebufferObject(m_ShadowMapSize, m_ShadowMapSize, QOpenGLFramebufferObject::Depth);
 
-    timerStart();
+    animTimerStart();
 }
 
 void OGLWidget::resizeGL(int w, int h)
@@ -209,13 +213,13 @@ void OGLWidget::paintGL()
     m_ProgramObject.bind();
     m_ProgramObject.setUniformValue("u_ShadowMap", m_ShadowTextureSlot - GL_TEXTURE0);
     m_ProgramObject.setUniformValue("u_ShadowMapSize", static_cast<float>(m_ShadowMapSize));
-    m_ProgramObject.setUniformValue("u_PointCloudFilteringQuality", m_PointCloudFilteringQuality);
+    m_ProgramObject.setUniformValue("u_ShadowPointCloudFilteringQuality", m_ShadowPointCloudFilteringQuality);
     m_ProgramObject.setUniformValue("u_ProjectionMatrix", m_ProjectionMatrix);
     m_ProgramObject.setUniformValue("u_LightDirection", QVector4D(0.0f, 0.0f, -1.0f, 0.0f));
     m_ProgramObject.setUniformValue("u_ProjectionLightMatrix", m_ProjectionLightMatrix);
     m_ProgramObject.setUniformValue("u_ShadowLightMatrix", m_ShadowLightMatrix);
     m_ProgramObject.setUniformValue("u_LightMatrix", m_LightMatrix);
-    m_ProgramObject.setUniformValue("u_LightPower", 1.0f); // сила освещения, можно параметризировать
+    m_ProgramObject.setUniformValue("u_MainLightPower", m_MainLightPower);
     m_Eye->draw(&m_ProgramObject);
     for(auto o: m_Objects) o->draw(&m_ProgramObject, context()->functions());
     m_ProgramObject.release();
@@ -253,8 +257,16 @@ void OGLWidget::mouseMoveEvent(QMouseEvent *event)
 
 void OGLWidget::wheelEvent(QWheelEvent *event)
 {
-    float mod = event->modifiers() & Qt::ControlModifier ? 3.0f : 1.0f;
+    if(event->modifiers() & Qt::ShiftModifier)
+    {
+        if(event->delta() > 0 && m_MainLightPower < 1) m_MainLightPower += 0.05f;
+        else if(event->delta() < 0 && m_MainLightPower >= 0) m_MainLightPower -= 0.05f;
 
+        qDebug() << "Main light power:" << m_MainLightPower;
+        return;
+    }
+
+    float mod = event->modifiers() & Qt::ControlModifier ? 3.0f : 1.0f;
     if(event->delta() > 0) m_Eye->translate(QVector3D(0.0f, 0.0f, 0.25f * mod));
     else if(event->delta() < 0) m_Eye->translate(QVector3D(0.0f, 0.0f, -0.25f * mod));
 
@@ -293,8 +305,8 @@ void OGLWidget::keyPressEvent(QKeyEvent *event)
         }
         case Qt::Key_Space:
         {
-            m_Timer.isActive() ? timerStop() : timerStart();
-            qDebug() << "Timer is active:" << m_Timer.isActive();
+            m_AnimationTimer.isActive() ? animTimerStop() : animTimerStart();
+            qDebug() << "Timer is active:" << m_AnimationTimer.isActive();
             break;
         }
     }
@@ -444,13 +456,13 @@ void OGLWidget::initParallelogram(float width, float height, float depth,
     m_Objects.append(eo3d);
 }
 
-void OGLWidget::timerStop()
+void OGLWidget::animTimerStop()
 {
-  m_Timer.stop();
+    if(m_AnimationTimer.isActive()) m_AnimationTimer.stop();
 }
 
-void OGLWidget::timerStart()
+void OGLWidget::animTimerStart()
 {
-   m_Timer.start(30, this);
+   if(!m_AnimationTimer.isActive()) m_AnimationTimer.start(30, this);
 }
 
