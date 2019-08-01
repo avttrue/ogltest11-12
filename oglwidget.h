@@ -58,17 +58,17 @@ private:
     QOpenGLFramebufferObject* m_DepthBuffer;
 
     float m_MainLightPower;
-    float m_ShadowPointCloudFilteringQuality;
-    int m_ShadowMapSize;
+    float m_ShadowPointCloudFilteringQuality; // качество теней, точность PointCloudFiltering
+    int m_ShadowMapSize;                      // качество теней, размер карты теней
     unsigned int m_ShadowTextureSlot;
     float m_LightRotateX;
     float m_LightRotateY;
+    bool m_IsDrawShadow; // отрисовка теней
 
     double m_AngleObject;
     double m_AngleGrop1;
     double m_AngleGrop2;
     double m_AngleGrop3;
-    double m_AngleGrop4;
     double m_AngleGropMain;
     int currentGroup;
 };

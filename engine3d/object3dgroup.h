@@ -11,7 +11,7 @@
 class Object3DGroup : public Transformational
 {
 public:
-    Object3DGroup(const QString &name);
+    Object3DGroup(const QString &name = "");
     void draw(QOpenGLShaderProgram* program, QOpenGLFunctions* functions);
     void rotate(const QQuaternion &r);
     void translate(const QVector3D &t);
@@ -20,6 +20,8 @@ public:
     void add(Transformational* obj);
     bool del(Transformational* obj);
     void del(const int &ind);
+    int size();
+    Transformational* at(int i);
     QString Name();
     void setName(const QString &n);
 

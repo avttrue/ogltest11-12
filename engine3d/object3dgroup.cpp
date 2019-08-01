@@ -96,6 +96,17 @@ void Object3DGroup::del(const int &ind)
     qDebug() << "Objects in group" << m_Name << ":" << m_Objects.count();
 }
 
+int Object3DGroup::size()
+{
+    return m_Objects.size();
+}
+
+Transformational* Object3DGroup::at(int i)
+{
+    if(i < 0 || i >= m_Objects.size()) return nullptr;
+    return m_Objects.at(i);
+}
+
 QString Object3DGroup::Name()
 {
     return m_Name;

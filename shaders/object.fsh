@@ -8,6 +8,7 @@ struct MaterialProperty
 
 uniform bool u_IsUseDiffuseMap;
 uniform bool u_IsUseNormalMap;
+uniform bool u_IsDrawShadow;
 uniform MaterialProperty u_MaterialProperty;
 uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_NormalMap;
@@ -25,9 +26,9 @@ varying highp vec4 v_positionLightMatrix;
 
 float SampleShadowMap(sampler2D map, vec2 coords, float compare)
 {
-   vec4 v = texture2D(map, coords);
-   float value = v.x * 255.0f + (v.y * 255.0f + (v.z * 255.0f + v.w) / 255.0f) / 255.0f;
-   return step(compare, value);
+    vec4 v = texture2D(map, coords);
+    float value = v.x * 255.0f + (v.y * 255.0f + (v.z * 255.0f + v.w) / 255.0f) / 255.0f;
+    return step(compare, value);
 }
 
 float SampleShadowMapLinear(sampler2D map, vec2 coords, float compare, vec2 texelsize)
@@ -99,9 +100,13 @@ void main(void)
     vec4 specularColor = reflectionColor * u_MainLightPower * pow(max(0.0f, dot(reflectLight, -eyeVec)), specularFactor);
     resultColor += specularColor * vec4(u_MaterialProperty.SpecularColor, 1.0f);
 
-    highp float shadowCoef = CalcShadowAmount(u_ShadowMap, v_positionLightMatrix);
-    shadowCoef += 0.15f; // избавляемся от абсолютной черноты тени
-    if(shadowCoef > 1.0f) shadowCoef = 1.0f;
+    highp float shadowCoef = 1.0f;
+    if(u_IsDrawShadow)
+    {
+        shadowCoef = CalcShadowAmount(u_ShadowMap, v_positionLightMatrix);
+        shadowCoef += 0.15f; // избавляемся от абсолютной черноты тени
+        if(shadowCoef > 1.0f) shadowCoef = 1.0f;
+    }
 
     gl_FragColor = resultColor * shadowCoef;
 }

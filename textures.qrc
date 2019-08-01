@@ -12,5 +12,7 @@
         <file>textures/sky/sky_right.png</file>
         <file>textures/sky/sky_top.png</file>
         <file>textures/cube3_n.png</file>
+        <file>textures/cube4_n.png</file>
+        <file>textures/cube4.png</file>
     </qresource>
 </RCC>
