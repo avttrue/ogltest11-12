@@ -291,13 +291,11 @@ void OGLWidget::keyPressEvent(QKeyEvent *event)
         {
             currentGroup >= m_Groups.size() - 1 ? currentGroup = 0 : currentGroup++;
 
-            auto list = m_Groups.keys();
-            list.sort(Qt::CaseInsensitive);
-            auto name = list.at(currentGroup);
-
             for(auto g: m_Groups) g->del(m_Eye);
-            m_Groups.value(name)->add(m_Eye);
-            qDebug() << "Current group:" << name;
+
+            auto g = objectGroup(currentGroup); if(!g) return;
+            g->add(m_Eye);
+            qDebug() << "Current group:" << g->Name();
             break;
         }
         case Qt::Key_Delete:
@@ -501,7 +499,12 @@ void OGLWidget::animTimerStart()
 
 Object3DGroup *OGLWidget::objectGroup(int index)
 {
-  auto name = m_Groups.keys().at(index);
+  if(index < 0 || m_Groups.size() <= index) return nullptr;
+
+  auto list = m_Groups.keys();
+  list.sort(Qt::CaseInsensitive);
+  auto name = list.at(index);
+
   return m_Groups.value(name, nullptr);
 }
 
