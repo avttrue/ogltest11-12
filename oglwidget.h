@@ -38,9 +38,12 @@ protected:
                            QImage *texturemap = nullptr, QImage *normalmap = nullptr);
     void animTimerStop();
     void animTimerStart();
-    Object3DGroup* objectGroup(const QString& name);
-    Object3DGroup* objectGroup(int index);
-    Object3DGroup* addObjectGroup(const QString &name);
+    Object3DGroup* getGroup(const QString& name);
+    Object3DGroup* getGroup(int index);
+    Object3DGroup* addGroup(const QString &name);
+    int delGroup(const QString& name);
+
+    void applyMainLight();
 
 private:
     QMatrix4x4 m_ProjectionMatrix;

@@ -28,13 +28,7 @@ OGLWidget::OGLWidget(QWidget *parent)
     m_ProjectionLightMatrix.setToIdentity();
     m_ProjectionLightMatrix.ortho(-40.0f, 40.0f, -40.0f, 40.0f, -40.0f, 40.0f); // можно параметризировать
 
-    m_ShadowLightMatrix.setToIdentity();
-    m_ShadowLightMatrix.rotate(m_LightRotateX, 1.0f, 0.0f, 0.0f); // * Важен порядок
-    m_ShadowLightMatrix.rotate(m_LightRotateY, 0.0f, 1.0f, 0.0f); // *
-
-    m_LightMatrix.setToIdentity();
-    m_LightMatrix.rotate(-m_LightRotateY, 0.0f, 1.0f, 0.0f); // *
-    m_LightMatrix.rotate(-m_LightRotateX, 1.0f, 0.0f, 0.0f); // *
+    applyMainLight();
 
     m_Eye = new Eye;
     m_Eye->translate(QVector3D(0.0f, 0.0f, 0.0f));
@@ -61,7 +55,7 @@ void OGLWidget::initializeGL()
 
     float step = 2.0f;
 
-    auto group = addObjectGroup("cube1");
+    auto group = addGroup("cube1");
     for(float x = -step; x <= step; x += step)
     {
         for(float y = -step; y <= step; y += step)
@@ -77,7 +71,7 @@ void OGLWidget::initializeGL()
     }
     group->translate(QVector3D(-5.0f, 0.0f, 0.0f));
 
-    group = addObjectGroup("cube2");
+    group = addGroup("cube2");
     for(float x = -step; x <= step; x += step)
     {
         for(float y = -step; y <= step; y += step)
@@ -93,7 +87,7 @@ void OGLWidget::initializeGL()
     }
     group->translate(QVector3D(5.0f, 0.0f, 0.0f));
 
-    group = addObjectGroup("cube3");
+    group = addGroup("cube3");
     for(float x = -step; x <= step; x += step)
     {
         for(float y = -step; y <= step; y += step)
@@ -109,13 +103,13 @@ void OGLWidget::initializeGL()
     }
     group->translate(QVector3D(0.0f, 0.0f, -10.0f));
 
-    group = addObjectGroup("All cubes");
-    group->add(objectGroup("cube1"));
-    group->add(objectGroup("cube2"));
-    group->add(objectGroup("cube3"));
+    group = addGroup("All cubes");
+    group->add(getGroup("cube1"));
+    group->add(getGroup("cube2"));
+    group->add(getGroup("cube3"));
     group->translate(QVector3D(0.0f, 15.0f, 0.0f));
 
-    group = addObjectGroup("sphere-cube-cube-pyramid");
+    group = addGroup("sphere-cube-cube-pyramid");
     m_Objects.append(new Object3D);
     if(m_Objects.last()->load(":/models/sphere.obj"))
     {
@@ -150,7 +144,7 @@ void OGLWidget::initializeGL()
     }
     group->translate(QVector3D(0.0f, -4.8f, 0.0f));
 
-    group = addObjectGroup("table");
+    group = addGroup("table");
     initParallelogram(60.0, 5.0, 60.0,
                       new QImage(":/textures/cube4.png"), new QImage(":/textures/cube4_n.png"));
     m_Objects.last()->translate(QVector3D(0.0, -10.0, 0.0));
@@ -293,7 +287,7 @@ void OGLWidget::keyPressEvent(QKeyEvent *event)
 
             for(auto g: m_Groups) g->del(m_Eye);
 
-            auto g = objectGroup(currentGroup); if(!g) return;
+            auto g = getGroup(currentGroup); if(!g) return;
             g->add(m_Eye);
             qDebug() << "Current group:" << g->Name();
             break;
@@ -323,7 +317,10 @@ void OGLWidget::timerEvent(QTimerEvent *event)
 {
     Q_UNUSED(event);
 
-    Object3DGroup* g = objectGroup("cube1");
+    m_LightRotateY += 30 * static_cast<float>(qSin(M_PI / 360.0));
+    applyMainLight();
+
+    Object3DGroup* g = getGroup("cube1");
     if(g)
     {
         for(int i = 0; i < g->size(); i++)
@@ -343,7 +340,7 @@ void OGLWidget::timerEvent(QTimerEvent *event)
         g->rotate(QQuaternion::fromAxisAndAngle(0.0f, 1.0f, 0.0f, static_cast<float>(-qSin(m_AngleGrop1))));
     }
 
-    g = objectGroup("cube2");
+    g = getGroup("cube2");
     if(g)
     {
         for(int i = 0; i < g->size(); i++)
@@ -363,7 +360,7 @@ void OGLWidget::timerEvent(QTimerEvent *event)
         g->rotate(QQuaternion::fromAxisAndAngle(0.0f, 1.0f, 0.0f, static_cast<float>(-qSin(m_AngleGrop1))));
     }
 
-    g = objectGroup("cube3");
+    g = getGroup("cube3");
     if(g)
     {
         for(int i = 0; i < g->size(); i++)
@@ -383,7 +380,7 @@ void OGLWidget::timerEvent(QTimerEvent *event)
         g->rotate(QQuaternion::fromAxisAndAngle(0.0f, 1.0f, 0.0f, static_cast<float>(-qSin(m_AngleGrop1))));
     }
 
-    g = objectGroup("All cubes");
+    g = getGroup("All cubes");
     if(g)
     {
         g->rotate(QQuaternion::fromAxisAndAngle(1.0f, 0.0f, 0.0f, static_cast<float>(-qSin(m_AngleGropMain))));
@@ -397,6 +394,17 @@ void OGLWidget::timerEvent(QTimerEvent *event)
     m_AngleGropMain += M_PI / 720.0;
 
     update();
+}
+
+void OGLWidget::applyMainLight()
+{
+    m_ShadowLightMatrix.setToIdentity();
+    m_ShadowLightMatrix.rotate(m_LightRotateX, 1.0f, 0.0f, 0.0f); // * Важен порядок
+    m_ShadowLightMatrix.rotate(m_LightRotateY, 0.0f, 1.0f, 0.0f); // *
+
+    m_LightMatrix.setToIdentity();
+    m_LightMatrix.rotate(-m_LightRotateY, 0.0f, 1.0f, 0.0f); // *
+    m_LightMatrix.rotate(-m_LightRotateX, 1.0f, 0.0f, 0.0f); // *
 }
 
 void OGLWidget::initShaders()
@@ -497,27 +505,32 @@ void OGLWidget::animTimerStart()
     if(!m_AnimationTimer.isActive()) m_AnimationTimer.start(30, this);
 }
 
-Object3DGroup *OGLWidget::objectGroup(int index)
+Object3DGroup *OGLWidget::getGroup(int index)
 {
-  if(index < 0 || m_Groups.size() <= index) return nullptr;
+    if(index < 0 || m_Groups.size() <= index) return nullptr;
 
-  auto list = m_Groups.keys();
-  list.sort(Qt::CaseInsensitive);
-  auto name = list.at(index);
+    auto list = m_Groups.keys();
+    list.sort(Qt::CaseInsensitive);
+    auto name = list.at(index);
 
-  return m_Groups.value(name, nullptr);
+    return m_Groups.value(name, nullptr);
 }
 
-Object3DGroup* OGLWidget::objectGroup(const QString& name)
+Object3DGroup* OGLWidget::getGroup(const QString& name)
 {
     return m_Groups.value(name, nullptr);
 }
 
-Object3DGroup* OGLWidget::addObjectGroup(const QString& name)
+Object3DGroup* OGLWidget::addGroup(const QString& name)
 {
-  auto result = new Object3DGroup(name);
-  m_Groups.insert(name, result);
-  return result;
+    auto result = new Object3DGroup(name);
+    m_Groups.insert(name, result);
+    return result;
 
+}
+
+int OGLWidget::delGroup(const QString &name)
+{
+    return m_Groups.remove(name);
 }
 
