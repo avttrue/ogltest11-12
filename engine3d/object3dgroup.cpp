@@ -79,21 +79,17 @@ void Object3DGroup::add(Transformational *obj)
     localmatrix = m_GlobalTransform * localmatrix;
 
     obj->setGlobalTransform(localmatrix);
-    qDebug() << "Objects in group" << m_Name << ":" << m_Objects.count();
 }
 
 bool Object3DGroup::del(Transformational *obj)
 {
     bool result = m_Objects.removeAll(obj) > 0 ? true : false;
-
-    qDebug() << "Objects in group" << m_Name << ":" << m_Objects.count();
     return result;
 }
 
 void Object3DGroup::del(const int &ind)
 {
     m_Objects.remove(ind);
-    qDebug() << "Objects in group" << m_Name << ":" << m_Objects.count();
 }
 
 int Object3DGroup::size()
