@@ -38,6 +38,9 @@ protected:
                            QImage *texturemap = nullptr, QImage *normalmap = nullptr);
     void animTimerStop();
     void animTimerStart();
+    Object3DGroup* objectGroup(const QString& name);
+    Object3DGroup* objectGroup(int index);
+    Object3DGroup* addObjectGroup(const QString &name);
 
 private:
     QMatrix4x4 m_ProjectionMatrix;
@@ -50,9 +53,8 @@ private:
     QVector2D m_MousePosition;
     QQuaternion m_Rotation;
     QVector<Object3D*> m_Objects;
-    QVector<Object3DGroup*> m_Groups;
+    QHash<QString, Object3DGroup*> m_Groups;
     QBasicTimer m_AnimationTimer;
-    Object3DGroup* m_GlobalGroup;
     Eye* m_Eye;
     SkyBox* m_SkyBox;
     QOpenGLFramebufferObject* m_DepthBuffer;

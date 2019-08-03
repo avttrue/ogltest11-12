@@ -36,7 +36,6 @@ OGLWidget::OGLWidget(QWidget *parent)
     m_LightMatrix.rotate(-m_LightRotateY, 0.0f, 1.0f, 0.0f); // *
     m_LightMatrix.rotate(-m_LightRotateX, 1.0f, 0.0f, 0.0f); // *
 
-    m_GlobalGroup = new Object3DGroup("Global");
     m_Eye = new Eye;
     m_Eye->translate(QVector3D(0.0f, 0.0f, 0.0f));
 
@@ -50,7 +49,6 @@ OGLWidget::~OGLWidget()
     for(auto o: m_Groups) delete o;
     delete m_Eye;
     delete m_SkyBox;
-    delete m_GlobalGroup;
 }
 
 void OGLWidget::initializeGL()
@@ -63,7 +61,7 @@ void OGLWidget::initializeGL()
 
     float step = 2.0f;
 
-    m_Groups.append(new Object3DGroup("cube1"));
+    auto group = addObjectGroup("cube1");
     for(float x = -step; x <= step; x += step)
     {
         for(float y = -step; y <= step; y += step)
@@ -73,13 +71,13 @@ void OGLWidget::initializeGL()
                 initParallelogram(1.0f, 1.0f, 1.0f,
                                   new QImage(":/textures/cube1.png"), new QImage(":/textures/cube1_n.png"));
                 m_Objects.last()->translate(QVector3D(x, y, z));
-                m_Groups.last()->add(m_Objects.last());
+                group->add(m_Objects.last());
             }
         }
     }
-    m_Groups.last()->translate(QVector3D(-5.0f, 0.0f, 0.0f));
+    group->translate(QVector3D(-5.0f, 0.0f, 0.0f));
 
-    m_Groups.append(new Object3DGroup("cube2"));
+    group = addObjectGroup("cube2");
     for(float x = -step; x <= step; x += step)
     {
         for(float y = -step; y <= step; y += step)
@@ -89,13 +87,13 @@ void OGLWidget::initializeGL()
                 initParallelogram(1.0f, 1.0f, 1.0f,
                                   new QImage(":/textures/cube2.png"), new QImage(":/textures/cube2_n.png"));
                 m_Objects.last()->translate(QVector3D(x, y, z));
-                m_Groups.last()->add(m_Objects.last());
+                group->add(m_Objects.last());
             }
         }
     }
-    m_Groups.last()->translate(QVector3D(5.0f, 0.0f, 0.0f));
+    group->translate(QVector3D(5.0f, 0.0f, 0.0f));
 
-    m_Groups.append(new Object3DGroup("cube3"));
+    group = addObjectGroup("cube3");
     for(float x = -step; x <= step; x += step)
     {
         for(float y = -step; y <= step; y += step)
@@ -105,25 +103,25 @@ void OGLWidget::initializeGL()
                 initParallelogram(1.0f, 1.0f, 1.0f,
                                   new QImage(":/textures/cube3.png"), new QImage(":/textures/cube3_n.png"));
                 m_Objects.last()->translate(QVector3D(x, y, z));
-                m_Groups.last()->add(m_Objects.last());
+                group->add(m_Objects.last());
             }
         }
     }
-    m_Groups.last()->translate(QVector3D(0.0f, 0.0f, -10.0f));
+    group->translate(QVector3D(0.0f, 0.0f, -10.0f));
 
-    m_Groups.append(new Object3DGroup("All cubes"));
-    for(int i = 0; i < m_Groups.size() -1; i++)
-        m_Groups.last()->add(m_Groups.at(i));
-    m_Groups.last()->translate(QVector3D(0.0f, 15.0f, 0.0f));
-    m_GlobalGroup->add(m_Groups.last());
+    group = addObjectGroup("All cubes");
+    group->add(objectGroup("cube1"));
+    group->add(objectGroup("cube2"));
+    group->add(objectGroup("cube3"));
+    group->translate(QVector3D(0.0f, 15.0f, 0.0f));
 
-    m_Groups.append(new Object3DGroup("sphere-cube-cube-pyramid"));
+    group = addObjectGroup("sphere-cube-cube-pyramid");
     m_Objects.append(new Object3D);
     if(m_Objects.last()->load(":/models/sphere.obj"))
     {
         m_Objects.last()->scale(3.0f);
         m_Objects.last()->translate(QVector3D(-10.0f, 0.0f, 0.0f));
-        m_Groups.last()->add(m_Objects.last());
+        group->add(m_Objects.last());
     }
 
     m_Objects.append(new Object3D);
@@ -131,7 +129,7 @@ void OGLWidget::initializeGL()
     {
         m_Objects.last()->scale(3.0f);
         m_Objects.last()->translate(QVector3D(0.0f, 0.0f, 0.0f));
-        m_Groups.last()->add(m_Objects.last());
+        group->add(m_Objects.last());
     }
 
     m_Objects.append(new Object3D);
@@ -140,7 +138,7 @@ void OGLWidget::initializeGL()
         m_Objects.last()->scale(3.0f);
         m_Objects.last()->translate(QVector3D(12.0f, 0.0f, 12.0f));
         m_Objects.last()->rotate(QQuaternion::fromAxisAndAngle(0.0f, 1.0f, 0.0f, 45.0f));
-        m_Groups.last()->add(m_Objects.last());
+        group->add(m_Objects.last());
     }
 
     m_Objects.append(new Object3D);
@@ -148,18 +146,15 @@ void OGLWidget::initializeGL()
     {
         m_Objects.last()->scale(3.0f);
         m_Objects.last()->translate(QVector3D(10.0f, 0.0f, 0.0f));
-        m_Groups.last()->add(m_Objects.last());
+        group->add(m_Objects.last());
     }
-    m_Groups.last()->translate(QVector3D(0.0f, -4.8f, 0.0f));
-    m_GlobalGroup->add(m_Groups.last());
+    group->translate(QVector3D(0.0f, -4.8f, 0.0f));
 
-
-    m_Groups.append(new Object3DGroup("table"));
+    group = addObjectGroup("table");
     initParallelogram(60.0, 5.0, 60.0,
                       new QImage(":/textures/cube4.png"), new QImage(":/textures/cube4_n.png"));
     m_Objects.last()->translate(QVector3D(0.0, -10.0, 0.0));
-    m_Groups.last()->add(m_Objects.last());
-    m_GlobalGroup->add(m_Groups.last());
+    group->add(m_Objects.last());
 
     m_SkyBox = new SkyBox(1000.0f,
                           QImage(":/textures/sky/sky_forward.png"),
@@ -295,9 +290,14 @@ void OGLWidget::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Tab:
         {
             currentGroup >= m_Groups.size() - 1 ? currentGroup = 0 : currentGroup++;
+
+            auto list = m_Groups.keys();
+            list.sort(Qt::CaseInsensitive);
+            auto name = list.at(currentGroup);
+
             for(auto g: m_Groups) g->del(m_Eye);
-            m_Groups.at(currentGroup)->add(m_Eye);
-            qDebug() << "Current group:" << m_Groups.at(currentGroup)->Name();
+            m_Groups.value(name)->add(m_Eye);
+            qDebug() << "Current group:" << name;
             break;
         }
         case Qt::Key_Delete:
@@ -325,8 +325,7 @@ void OGLWidget::timerEvent(QTimerEvent *event)
 {
     Q_UNUSED(event);
 
-    Object3DGroup* g = nullptr;
-    for(Object3DGroup* og: m_Groups) if(og->Name() == "cube1") { g = og; break; }
+    Object3DGroup* g = objectGroup("cube1");
     if(g)
     {
         for(int i = 0; i < g->size(); i++)
@@ -346,7 +345,7 @@ void OGLWidget::timerEvent(QTimerEvent *event)
         g->rotate(QQuaternion::fromAxisAndAngle(0.0f, 1.0f, 0.0f, static_cast<float>(-qSin(m_AngleGrop1))));
     }
 
-    for(Object3DGroup* og: m_Groups) if(og->Name() == "cube2") { g = og; break; }
+    g = objectGroup("cube2");
     if(g)
     {
         for(int i = 0; i < g->size(); i++)
@@ -366,7 +365,7 @@ void OGLWidget::timerEvent(QTimerEvent *event)
         g->rotate(QQuaternion::fromAxisAndAngle(0.0f, 1.0f, 0.0f, static_cast<float>(-qSin(m_AngleGrop1))));
     }
 
-    for(Object3DGroup* og: m_Groups) if(og->Name() == "cube3") { g = og; break; }
+    g = objectGroup("cube3");
     if(g)
     {
         for(int i = 0; i < g->size(); i++)
@@ -386,7 +385,7 @@ void OGLWidget::timerEvent(QTimerEvent *event)
         g->rotate(QQuaternion::fromAxisAndAngle(0.0f, 1.0f, 0.0f, static_cast<float>(-qSin(m_AngleGrop1))));
     }
 
-    for(Object3DGroup* og: m_Groups) if(og->Name() == "All cubes") { g = og; break; }
+    g = objectGroup("All cubes");
     if(g)
     {
         g->rotate(QQuaternion::fromAxisAndAngle(1.0f, 0.0f, 0.0f, static_cast<float>(-qSin(m_AngleGropMain))));
@@ -498,5 +497,24 @@ void OGLWidget::animTimerStop()
 void OGLWidget::animTimerStart()
 {
     if(!m_AnimationTimer.isActive()) m_AnimationTimer.start(30, this);
+}
+
+Object3DGroup *OGLWidget::objectGroup(int index)
+{
+  auto name = m_Groups.keys().at(index);
+  return m_Groups.value(name, nullptr);
+}
+
+Object3DGroup* OGLWidget::objectGroup(const QString& name)
+{
+    return m_Groups.value(name, nullptr);
+}
+
+Object3DGroup* OGLWidget::addObjectGroup(const QString& name)
+{
+  auto result = new Object3DGroup(name);
+  m_Groups.insert(name, result);
+  return result;
+
 }
 
